@@ -9,17 +9,12 @@ Link do projeto no github: https://github.com/brenobss/trab-SO
 
 Explicação de cada código:
 
-Semáforo: O semáforo é utilizado para garantir que apenas uma thread possa alterar a vida de um jogador por vez, evitando conflitos e garantindo que a atualização da vida seja feita de maneira segura.
-O método take_damage(), self.semaphore.acquire() é chamado para obter o acesso exclusivo à atualização da vida. Se o semáforo já estiver em uso (valor é 0), a thread que chama acquire espera até que o semáforo seja liberado; depois de adquirir o semáforo, a vida do jogador é atualizada com o dano recebido; self.semaphore.release() é chamado no bloco finally para garantir que o semáforo será liberado mesmo se ocorrer uma exceção durante a atualização da saúde. Isso permite que outras threads possam adquirir o semáforo e acessar o recurso.
+O semáforo é usado para proteger a seção crítica onde o ataque e a atualização da vida são realizados, não diretamente para a atualização da vida do jogador. O semáforo evita que múltiplas threads realizem ataques simultâneos, mas não garante acesso exclusivo à atualização da vida em si.
+A atualização da vida do jogador é feita de forma segura usando um Lock na classe Player (self.lock) dentro do método take_damage(). O semáforo protege a seção crítica do ataque para evitar ataques simultâneos.
+O semáforo é usado para garantir que apenas uma thread possa atacar e realizar a atualização de saúde por vez. O método acquire() é usado para obter o acesso exclusivo ao código crítico do ataque, e release() para liberar o semáforo após o ataque. O Lock na classe Player garante a exclusão mútua na atualização da saúde do jogador.
 
 Mutex: Um mutex (abreviação de Mutual Exclusion) é um mecanismo de sincronização usado para garantir que apenas uma thread possa acessar um recurso compartilhado por vez. Ele evita condições de corrida, onde múltiplas threads tentam acessar e modificar o mesmo recurso simultaneamente.
-Classe Mutex: self.locked indica se o mutex está bloqueado (True) ou disponível (False).
-Self.condition: Um objeto de condição para gerenciar a sincronização entre threads.
-Método acquire: Adquire o lock sobre self.condition.
-Espera até que self.locked seja False (ou seja, o mutex esteja disponível).
-Define self.locked como True, bloqueando o mutex.
-Método release: Adquire o lock sobre self.condition. Define self.locked como False, liberando o mutex. Notifica uma thread que está esperando para adquirir o mutex.
-Na classe Player: Método take_damage dquire o mutex com self.mutex.acquire(). Atualiza a vida do jogador de forma segura. Libera o mutex com self.mutex.release().
+Usa o global_lock para garantir que a alteração da saúde do oponente seja feita de forma segura e sem interferência de outras threads.
 
 Troca de mensagens: Agora a comunicação entre os jogadores é feita através de filas. Cada jogador tem sua própria fila de mensagens para receber dano e causar dano ao oponente.
 Classe Player: Cada jogador tem uma fila para receber dano e um método para atacar e receber dano.
