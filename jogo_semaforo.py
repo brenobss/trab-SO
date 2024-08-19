@@ -92,4 +92,5 @@ liu_kang = Player("Liu Kang", semaforo)
 scorpion = Player("Scorpion", semaforo)
 
 # Início do combate
+print("Luta implementando Semáforos como solução de condição de corrida\n")
 fight(liu_kang, scorpion)
