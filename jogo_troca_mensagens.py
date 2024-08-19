@@ -71,17 +71,3 @@ scorpion.set_opponent(liu_kang)
 # Início do combate
 print("Luta implementando Trocas de Mensagens como solução de condição de corrida\n")
 fight(liu_kang, scorpion)
-
-
-'''
-Classe Player:
-Construtor (__init__): Inicializa o jogador com um nome, uma fila de mensagens (queue), uma referência ao oponente e um status de vida (alive).
-Método attack: O jogador realiza um ataque e envia o dano para o oponente através da fila de mensagens. Depois, espera a resposta do oponente e aplica o dano recebido. A troca de
-mensagens entre as filas sincroniza o processo de ataque e resposta.
-Método take_damage: Aplica o dano ao jogador e verifica se ele perdeu a luta.
-Função fight:
-Criação das Filas: Cria duas filas de mensagens para troca entre os jogadores.
-Configuração dos Jogadores: Define as filas e os oponentes para cada jogador.
-Criação e Início das Threads: Cria threads para os ataques dos jogadores e as inicia.
-Espera pela Conclusão: Aguarda até que ambas as threads terminem.
-'''

@@ -2,79 +2,46 @@ import threading
 import time
 import random
 
-
-class Mutex:
-    def __init__(self):
-        self.locked = False
-        self.condition = threading.Condition()
-
-    def acquire(self):
-        self.condition.acquire()
-        try:
-            while self.locked:
-                # Espera até que o mutex esteja disponível
-                self.condition.wait()
-            self.locked = True
-        finally:
-            # Libera o lock após a atualização
-            self.condition.release()
-
-    def release(self):
-        self.condition.acquire()
-        try:
-            self.locked = False
-            # Notifica uma thread que está esperando
-            self.condition.notify()
-        finally:
-            # Libera o lock após a atualização
-            self.condition.release()
-
-
 class Player:
-    def __init__(self, name, mutex):
+    def __init__(self, name, global_lock):
         self.name = name
         self.health = 100
-        self.mutex = mutex
+        self.global_lock = global_lock
+        self.finished = threading.Event()
 
     def attack(self, opponent):
-        if self.health > 0:
+        if not self.finished.is_set():
             damage = random.randint(10, 20)
-            print(f"{self.name} atacou {opponent.name} com {damage} de dano!\n")
-            opponent.take_damage(damage)
-            return damage
-        else:
-            return 0
-
-    def take_damage(self, damage):
-        self.mutex.acquire()
-        try:
-            self.health -= damage
-            if self.health <= 0:
-                print(f"{self.name} sofreu {damage} de dano e perdeu a luta!\n")
-            else:
-                print(f"{self.name} sofreu {damage} de dano e agora tem {self.health} de vida.\n")
-        finally:
-            self.mutex.release()
-
+            print(f"{self.name} atacou {opponent.name} com {damage} de dano!")
+            with self.global_lock:
+                print(f"{self.name} está causando dano a {opponent.name}")
+                opponent.health -= damage
+                if opponent.health <= 0:
+                    opponent.health = 0
+                    print(f"{opponent.name} sofreu {damage} de dano e perdeu a luta!")
+                    opponent.finished.set()
+                print(f"{opponent.name} tem {opponent.health} de vida restante.")
+            print(f"{self.name} liberou o bloqueio após atacar {opponent.name}")
 
 def fight(player1, player2):
-    while player1.health > 0 and player2.health > 0:
-        # Ambos atacam ao mesmo tempo
-        t1 = threading.Thread(target=player1.attack, args=(player2,))
-        t2 = threading.Thread(target=player2.attack, args=(player1,))
-        t1.start()
-        t2.start()
-        t1.join()
-        t2.join()
+    round_counter = 0  # Contador de rodadas
+    while not (player1.finished.is_set() or player2.finished.is_set()):
+        print(f"\nRound {round_counter}")
+        player1.attack(player2)
+        if not player2.finished.is_set():
+            player2.attack(player1)
         time.sleep(1)
+        round_counter += 1  # Incrementa o contador de rodadas
 
+    if player1.finished.is_set():
+        print(f"{player1.name} perdeu a luta.")
+    if player2.finished.is_set():
+        print(f"{player2.name} perdeu a luta.")
 
-mutex = Mutex()
+global_lock = threading.Lock()
 
-# Inicialização dos jogadores
-liu_kang = Player("Liu Kang", mutex)
-scorpion = Player("Scorpion", mutex)
+liu_kang = Player("Liu Kang", global_lock)
+scorpion = Player("Scorpion", global_lock)
 
-# Início do combate
 print("Luta implementando Mutex como solução de condição de corrida\n")
 fight(liu_kang, scorpion)
