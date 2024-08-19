@@ -1,5 +1,39 @@
+Aluno: Breno Barreto de Souza Santos
+Matrícula: 219116820
 Descrição do Jogo: Um jogo de luta onde dois jogadores, Liu Kang e Scorpion, atacam-se mutuamente até que um deles perca toda a vida.
 Regras: Cada jogador ataca com um dano aleatório de 10 a 20 pontos. A luta continua até que um jogador tenha vida zero ou menos.
 Condição de Corrida: O ponto crítico é o método take_damage, onde a vida do jogador é atualizada. Condições de corrida são evitadas com a  implementação manual de semáforo, mutex, troca de mensagens e barreiras
 Como executar: primeiro certifique-se de ter o python 3 na sua máquina em seguida baixe o .zip do projeto em Code -> Download ZIP, em seguida extraia, entre na pasta projeto1 e abra dentro de um terminal, no terminal execute o comando -> python3 jogo_semaforo.py
 mude a palavra pós underline para a solução que deseja executar o exemplo foi a de semaforo, mas ainda tem mutex, troca de mensagens e barreiras
+
+Explicação de cada código:
+
+Semáforo: O semáforo é utilizado para garantir que apenas uma thread possa alterar a vida de um jogador por vez, evitando conflitos e garantindo que a atualização da vida seja feita de maneira segura.
+O método take_damage(), self.semaphore.acquire() é chamado para obter o acesso exclusivo à atualização da vida. Se o semáforo já estiver em uso (valor é 0), a thread que chama acquire espera até que o semáforo seja liberado; depois de adquirir o semáforo, a vida do jogador é atualizada com o dano recebido; self.semaphore.release() é chamado no bloco finally para garantir que o semáforo será liberado mesmo se ocorrer uma exceção durante a atualização da saúde. Isso permite que outras threads possam adquirir o semáforo e acessar o recurso.
+
+Mutex: Um mutex (abreviação de Mutual Exclusion) é um mecanismo de sincronização usado para garantir que apenas uma thread possa acessar um recurso compartilhado por vez. Ele evita condições de corrida, onde múltiplas threads tentam acessar e modificar o mesmo recurso simultaneamente.
+Classe Mutex: self.locked indica se o mutex está bloqueado (True) ou disponível (False).
+Self.condition: Um objeto de condição para gerenciar a sincronização entre threads.
+Método acquire: Adquire o lock sobre self.condition.
+Espera até que self.locked seja False (ou seja, o mutex esteja disponível).
+Define self.locked como True, bloqueando o mutex.
+Método release: Adquire o lock sobre self.condition. Define self.locked como False, liberando o mutex. Notifica uma thread que está esperando para adquirir o mutex.
+Na classe Player: Método take_damage dquire o mutex com self.mutex.acquire(). Atualiza a vida do jogador de forma segura. Libera o mutex com self.mutex.release().
+
+Troca de mensagens: Agora a comunicação entre os jogadores é feita através de filas. Cada jogador tem sua própria fila de mensagens para receber dano e causar dano ao oponente.
+Classe Player: Cada jogador tem uma fila para receber dano e um método para atacar e receber dano.
+Método attack: Calcula o dano e coloca-o na fila do oponente.
+Método take_damage: Recebe o dano da fila e atualiza a saúde.
+Função fight: Cria threads para atacar e receber dano e monitora o status dos jogadores até que um perca.
+Troca de Mensagens: As filas (queue.Queue()) são usadas para enviar e receber mensagens (dano) entre os jogadores. Cada jogador tem sua própria fila para receber o dano que é enviado pelo oponente.
+Sincronização: O uso das filas garante que as mensagens (danos) sejam entregues e processadas de maneira ordenada e segura. Threads que usam filas não precisam de locks explícitos, pois as operações de enfileiramento e desenfileiramento são atômicas, ou seja, uma vez que começa, ela termina sem a possibilidade de interferência de outras threads.
+
+Barreiras: A barreira garante que ambas as threads (representando os dois jogadores) estejam sincronizadas antes de continuar a execução após um ataque ou após receber dano.
+Classe Player: self.barrier Cada jogador tem uma barreira para sincronizar suas ações com o oponente.
+Método attack: Realiza um ataque e chama self.barrier.wait() após o ataque para garantir que a outra thread (o oponente) também esteja sincronizada antes de continuar.
+Método take_damage: Recebe dano e chama self.barrier.wait() após atualizar a vida, para sincronizar com a thread que está atacando.
+Função fight: Cria uma barreira com um contador de 2 (número de threads a serem sincronizadas).
+Cria e inicia duas threads, uma para cada jogador, que executam o método attack.
+A função aguarda até que um dos jogadores seja derrotado (quando o atributo alive do jogador se torna False).
+As threads são finalizadas após o combate.
+
